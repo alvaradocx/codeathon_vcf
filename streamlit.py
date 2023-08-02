@@ -125,7 +125,7 @@ if st.button('Run search'):
     
     #print sql query
     st.write('SQL query being used')
-    st.write(st.session_state['sql_query'])
+    st.write(st.session_state['sql_query'], unsafe_allow_html=True)
     
     # run user search
     region = 'us-east-1'
