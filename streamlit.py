@@ -1,6 +1,5 @@
 # import libraries
 import openai
-import numpy as np
 import pandas as pd
 import streamlit as st
 import boto3
