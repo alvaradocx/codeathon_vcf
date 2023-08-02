@@ -2,6 +2,5 @@ streamlit
 boto3
 openai
 pandas
-numpy
 time
 streamlit-chat 
