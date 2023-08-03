@@ -33,13 +33,27 @@ def generate_sql(query):
     return response.choices[0].text.strip()
 
 def create_table_definition():
-    prompt="""### SQL table, with its properties:
-    #
-    # annotated_variations({})
-    #
-    """.format(['run', 'CHR', 'POS', 'REF', 'ALT', 'DP', 'G_AD_2', 'EFFECT', 'FUNCLASS',
-       'CODON', 'variation', 'AA_LEN', 'protein_name', 'ref_aa', 'alt_aa',
-       'protein_position', 'ver', 'updated'])
+    prompt="""### SQL table, with the schema: CREATE TABLE annotated_variations (
+    run VARCHAR(255), -- SRA accession, run accession
+    chr VARCHAR(50),  -- chromosome
+    pos BIGINT,       -- DNA or RNA base position
+    ref VARCHAR(255), -- reference allele
+    alt VARCHAR(255), -- alternate or variant allele
+    dp BIGINT,
+    g_ad_2 BIGINT,
+    effect VARCHAR(255), -- effect values are CODON_CHANGE_PLUS_CODON_DELETION, CODON_CHANGE_PLUS_CODON_INSERTION, CODON_DELETION, CODON_INSERTION, FRAME_SHIFT, FRAME_SHIFT+START_LOST, INTERGENIC, NON_SYNONYMOUS_CODING, STOP_GAINED, SYNONYMOUS_CODING
+    funclass VARCHAR(255), -- function class(funclass) or consequence values are MISSENSE, NONE, NONSENSE, SILENT 
+    codon VARCHAR(255), -- codon encoding amino acid https://en.wikipedia.org/wiki/DNA_and_RNA_codon_tables
+    variation VARCHAR(255), -- variation allele
+    aa_len BIGINT,  -- variation amino acid length
+    protein_name VARCHAR(255), -- protein_name's aliases are "gene" and "gene name".  For demo until gene info is loaded.
+    ref_aa VARCHAR(255), -- reference amino acid, wild-type amino acid
+    alt_aa VARCHAR(255), -- alternate or variant amino acid
+    protein_position BIGINT, -- protein position of ref_aa and alt_aa
+    ver VARCHAR(50),
+    updated TIMESTAMP
+);
+    """
     return prompt
 
 def adjust_query(qstring):
