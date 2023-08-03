@@ -152,11 +152,11 @@ st.sidebar.write("##### Proof of Concept for NCBI VCF for Population Genomics Co
 
 # Create table property string
 table_schema = create_table_definition()
-# Text input where the user enter the text to be translated to SQL query
-query = st.text_area('Enter your search question/query', '')
 
 with st.container():
     st.subheader('Natural Text Search')
+    # Text input where the user enter the text to be translated to SQL query
+    query = st.text_area('Enter your search question/query', '')
     #if the Generate SQL query if clicked 
     if st.button('Run search'):
         # check user input 
