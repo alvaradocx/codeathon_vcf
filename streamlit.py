@@ -214,8 +214,8 @@ with st.container():
 with st.container():
     st.subheader('SQL Query')
     st.text('''Only use this is you know the exact SQL query you want to use.
-Will not create SQL for you.''')
-    sql_query = st.text_area('Enter SQL search', '')
+Will not create a SQL query for you.''')
+    sql_query = st.text_area('Enter SQL query', '')
     if st.button('Run SQL query'):
         try:
             check_string(query)
