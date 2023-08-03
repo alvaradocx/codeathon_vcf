@@ -1,9 +1,11 @@
 # import libraries
 import openai
+import numpy as np
 import pandas as pd
 import streamlit as st
 import boto3
 import time
+
 
 # required functions
 
@@ -46,7 +48,7 @@ def adjust_query(qstring):
     return qstring
 
 def combine_prompts(schema, query_prompt):
-    definition=create_table_definition()
+    schema=create_table_definition()
     query_init_string=f"### A query to answer: {query_prompt}"
     return schema+query_init_string
 
@@ -87,10 +89,52 @@ def results_to_dataframe(results):
     df = pd.DataFrame(rows, columns=columns)
     return df
 
+def escape_markdown(text): # print out SQL query with correct formatting
+    MD_SPECIAL_CHARS = "\`*_{}[]()#+-.!"
+    for char in MD_SPECIAL_CHARS:
+        text = text.replace(char, "\\"+char)
+    return text
+
+def contains_str_from_list(input_str, elements_list): # check if a string contains any words from list
+    concerns = any(element in input_str for element in elements_list)
+
+    if concerns:
+        return True
+    else:
+        return False
+    
+
+def check_string(input_str): # check for any invalid words and raise correct exception
+    # check if str conatins any security concern commands
+    sec_check = contains_str_from_list(input_str, st.session_state['security_catch'])
+    if 'CREATE' in input_str:
+        raise ExecutionFailure("SQL error - Can't execute CREATE command")
+    elif sec_check:
+        raise InvalidSecurityQuery(f"""Query can't be executed due to security.\n
+Your query contains one or more of the following invalid SQL commands:
+'INSERT', 'UPDATE', 'DELETE', 'ALTER TABLE', 'CREATE TABLE',
+'DROP TABLE', 'TRUNCATE TABLE', 'MERGE', 'RENAME TABLE', 'RENAME'""")
+
+# custom exceptions
+class ExecutionFailure(Exception):
+   def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+class InvalidSecurityQuery(Exception):
+   def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+                                  
 #------------------------------------------------------------------------------------------------------------
 # session_state vars
 if 'sql_query' not in st.session_state: # create session state variable for client auth 
         st.session_state['sql_query'] = None
+
+if 'security_catch' not in st.session_state:
+    st.session_state['security_catch'] = ['INSERT', 'UPDATE', 'DELETE', 'ALTER TABLE',
+                                          'CREATE TABLE', 'DROP TABLE', 'TRUNCATE TABLE',
+                                          'MERGE', 'RENAME TABLE', 'RENAME']
 
 # Load OpenAI API key from secrets file
 openai.api_key=st.secrets["openai_key"]
@@ -101,58 +145,71 @@ aws_secret = st.secrets["aws_secret"]
 st.sidebar.header('Var.ai')
 
 st.sidebar.write("""
-         ######  This app uses streamlit and OpenAI APIs to allow users to retrieve data on VCF data
+         ######  This app uses streamlit and OpenAI APIs to allow users to retrieve data on VCF data using natural language text
          """)
 
 # Create table property string
 table_schema = create_table_definition()
 # Text input where the user enter the text to be translated to SQL query
-query = st.text_input('Enter your search question/query', '')
-sql_query = st.text_input('Enter SQL search', '')
+query = st.text_area('Enter your search question/query', '')
+
+
 #if the Generate SQL query if clicked 
 if st.button('Run search'):
-  #if text input is not empty
-  if len(query) > 0:
-    
-    # process user search 
-    query_proc = adjust_query(query) # remove ?
-    query_final = combine_prompts(table_schema, query_proc)
-    #st.write(query_final)
-    #Generate sql query
-    Respo=generate_sql(query_final)
-    
-    st.session_state['sql_query'] =  Respo
-    
-    #print sql query
-    st.write('SQL query being used')
-    st.write(st.session_state['sql_query'], unsafe_allow_html=True)
-    
-    # run user search
-    region = 'us-east-1'
-    schema_name = 'ncbi-vcf-codeathon-rc-db1'
-    S3_STAGING_DIR = "s3://teamphan-output/streamlit_out/"
+    # check user input 
+    try:
+        check_string(query)
 
-    # establish client
-    athena_client = boto3.client(
-        "athena",
-        aws_access_key_id=aws_access,
-        aws_secret_access_key=aws_secret,
-        region_name=region,
-    )
+        #if text input is not empty
+        if len(query) > 0:
 
-    # run query
-    search_id= run_athena_query(athena_client, st.session_state['sql_query'], schema_name, S3_STAGING_DIR)
+            # process user search 
+            query_proc = adjust_query(query) # remove '?' if present
+            query_final = combine_prompts(table_schema, query_proc)
+            #Generate sql query
+            Respo=generate_sql(query_final)
+            clean_response = escape_markdown(Respo)
+            
+            st.session_state['sql_query'] =  Respo
+            
+            #print sql query
+            st.write('SQL query being used:')
+            st.markdown(clean_response)
+            
+            # run user search
+            region = 'us-east-1'
+            schema_name = 'ncbi-vcf-codeathon-rc-db1'
+            S3_STAGING_DIR = "s3://teamphan-output/streamlit_out/"
 
-    results = athena_client.get_query_results(QueryExecutionId=search_id)
+            # establish client
+            athena_client = boto3.client(
+                "athena",
+                aws_access_key_id=aws_access,
+                aws_secret_access_key=aws_secret,
+                region_name=region,
+            )
 
-    # conver results to df
-    results_df = results_to_dataframe(results)
+            # run query
+            search_id= run_athena_query(athena_client, st.session_state['sql_query'], schema_name, S3_STAGING_DIR)
 
-    st.dataframe(results_df)
-    
-   # allow user to download their filtered output
-    st.download_button(label="Download data as CSV", data=convert_df(results_df), mime='text/csv')
+            results = athena_client.get_query_results(QueryExecutionId=search_id)
 
+            # conver results to df
+            results_df = results_to_dataframe(results)
+
+            st.dataframe(results_df)
+            
+        # allow user to download their filtered output
+            st.download_button(label="Download data as CSV", data=convert_df(results_df), mime='text/csv')
+
+    except ExecutionFailure as e:
+        st.text(f"{e}")
+    except InvalidSecurityQuery as i:
+        st.text(f"{i}")
+
+  
+
+sql_query = st.text_area('Enter SQL search', '')
 if st.button('Run SQL query'):
     st.session_state['sql_query'] = sql_query
 
