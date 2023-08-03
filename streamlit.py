@@ -148,7 +148,7 @@ st.sidebar.header('# Var.ai')
 st.sidebar.write("""
          This app uses streamlit and OpenAI APIs to allow users to retrieve data on VCF data using natural language text
          """)
-st.sidebar.write("#### Proof of Concept for NCBI VCF for Population Genomics Codeathon - Team Phan")
+st.sidebar.write("##### Proof of Concept for NCBI VCF for Population Genomics Codeathon - Team Phan")
 
 # Create table property string
 table_schema = create_table_definition()
