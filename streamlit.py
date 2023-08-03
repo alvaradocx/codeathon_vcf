@@ -135,18 +135,20 @@ if 'security_catch' not in st.session_state:
     st.session_state['security_catch'] = ['INSERT', 'UPDATE', 'DELETE', 'ALTER TABLE',
                                           'CREATE TABLE', 'DROP TABLE', 'TRUNCATE TABLE',
                                           'MERGE', 'RENAME TABLE', 'RENAME']
-
+#------------------------------------------------------------------------------------------------------------
+## Main script
 # Load OpenAI API key from secrets file
 openai.api_key=st.secrets["openai_key"]
 aws_access = st.secrets["aws_access"]
 aws_secret = st.secrets["aws_secret"]
 
 # Adding some texts to explain the purpose of the app
-st.sidebar.header('Var.ai')
+st.sidebar.header('# Var.ai')
 
 st.sidebar.write("""
          ######  This app uses streamlit and OpenAI APIs to allow users to retrieve data on VCF data using natural language text
          """)
+st.sidebar.write("Proof of Concept for NCBI VCF for Population Genomics Codeathon - Team Phan")
 
 # Create table property string
 table_schema = create_table_definition()
