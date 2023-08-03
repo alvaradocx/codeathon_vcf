@@ -164,7 +164,7 @@ with st.container():
              check_string(query)
      
              #if text input is not empty
-             if len(query) > 0:
+               if len(query) > 0:
      
                  # process user search 
                  query_proc = adjust_query(query) # remove '?' if present
@@ -183,7 +183,7 @@ with st.container():
                  region = 'us-east-1'
                  schema_name = 'ncbi-vcf-codeathon-rc-db1'
                  S3_STAGING_DIR = "s3://teamphan-output/streamlit_out/"
-     
+          
                  # establish client
                  athena_client = boto3.client(
                      "athena",
@@ -191,19 +191,19 @@ with st.container():
                      aws_secret_access_key=aws_secret,
                      region_name=region,
                  )
-     
+          
                  # run query
                  search_id= run_athena_query(athena_client, st.session_state['sql_query'], schema_name, S3_STAGING_DIR)
-     
+          
                  results = athena_client.get_query_results(QueryExecutionId=search_id)
-     
+          
                  # conver results to df
                  results_df = results_to_dataframe(results)
-     
+          
                  st.dataframe(results_df)
-                 
-             # allow user to download their filtered output
-                 st.download_button(label="Download data as CSV", data=convert_df(results_df), mime='text/csv')
+                      
+                  # allow user to download their filtered output
+                      st.download_button(label="Download data as CSV", data=convert_df(results_df), mime='text/csv')
      
          except ExecutionFailure as e:
              st.text(f"{e}")
@@ -220,30 +220,30 @@ with st.container():
                check_string(query)
                st.session_state['sql_query'] = sql_query
           
-             # run user search
-              region = 'us-east-1'
-              schema_name = 'ncbi-vcf-codeathon-rc-db1'
-              S3_STAGING_DIR = "s3://teamphan-output/streamlit_out/"
-          
-              # establish client
-              athena_client = boto3.client(
+               # run user search
+               region = 'us-east-1'
+               schema_name = 'ncbi-vcf-codeathon-rc-db1'
+               S3_STAGING_DIR = "s3://teamphan-output/streamlit_out/"
+               
+               # establish client
+               athena_client = boto3.client(
                   "athena",
                   aws_access_key_id=aws_access,
                   aws_secret_access_key=aws_secret,
                   region_name=region,
-              )
-          
-              # run query
-              search_id= run_athena_query(athena_client, st.session_state['sql_query'], schema_name, S3_STAGING_DIR)
-          
-              results = athena_client.get_query_results(QueryExecutionId=search_id)
-          
-              # conver results to df
-              results_df = results_to_dataframe(results)
-          
-              st.dataframe(results_df)
-              # allow user to download their filtered output
-              st.download_button(label="Download data as CSV", data=convert_df(results_df), mime='text/csv')
+               )
+               
+               # run query
+               search_id= run_athena_query(athena_client, st.session_state['sql_query'], schema_name, S3_STAGING_DIR)
+               
+               results = athena_client.get_query_results(QueryExecutionId=search_id)
+               
+               # conver results to df
+               results_df = results_to_dataframe(results)
+               
+               st.dataframe(results_df)
+               # allow user to download their filtered output
+               st.download_button(label="Download data as CSV", data=convert_df(results_df), mime='text/csv')
      
           except ExecutionFailure as e:
                st.text(f"{e}")
