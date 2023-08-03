@@ -156,7 +156,8 @@ table_schema = create_table_definition()
 with st.container():
     st.subheader('Natural Text Search')
     # Text input where the user enter the text to be translated to SQL query
-    query = st.text_area('Enter your search question/query', '')
+    st.text('''Enter a question to obtain results''')
+    query = st.text_area('Enter your search question', '')
     #if the Generate SQL query if clicked 
     if st.button('Run search'):
         # check user input 
@@ -213,7 +214,7 @@ with st.container():
   
 with st.container():
     st.subheader('SQL Query')
-    st.text('''Only use this is you know the exact SQL query you want to use.
+    st.text('''Only use this if you know the exact SQL query you want to use.
 Will not create a SQL query for you.''')
     sql_query = st.text_area('Enter SQL query', '')
     if st.button('Run SQL query'):
