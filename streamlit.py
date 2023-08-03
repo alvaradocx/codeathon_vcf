@@ -213,7 +213,8 @@ with st.container():
   
 with st.container():
     st.subheader('SQL Query')
-    st.text('Only use this is you know the exact SQL query you want to use. Will not create SQL for you.')
+    st.text('''Only use this is you know the exact SQL query you want to use.
+Will not create SQL for you.''')
     sql_query = st.text_area('Enter SQL search', '')
     if st.button('Run SQL query'):
         try:
